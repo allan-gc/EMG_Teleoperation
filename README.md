@@ -1,0 +1,1 @@
+## MSR Winter Project - EMG Teleoperation of Adroit Robotic Arm

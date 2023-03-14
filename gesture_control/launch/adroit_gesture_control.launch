@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+ 
+  <!-- Load PyTorch model and model stats -->
+  <param name="pytorch_model_stats"
+    value="$(find gesture_control)/config/combined_transfer_data_FINAL_BACKUP1_stats.txt " />
+
+  <param name="pytorch_model"
+    value="$(find gesture_control)/config/combined_transfer_data_FINAL_BACKUP1_XL.pt" />
+
+  <arg name="myo_sim" default="false" />
+
+  <node name="real_time" pkg="gesture_control" type="real_time.py" output="screen" />
+
+  <!-- Run adroit-myo interface node-->
+  <!-- <node name="gesture_command" pkg="gesture_control" type="adroit_gesture_command.py" output="screen" >
+    <param name="sim" value= "$(arg myo_sim)"/>
+  </node> -->
+
+
+
+</launch>

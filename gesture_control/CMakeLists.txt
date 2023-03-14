@@ -15,13 +15,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   sensor_msgs
+  geometry_msgs
   std_msgs
-  tf2
-  tf2_geometry_msgs
   interactive_markers
   moveit_msgs
   message_generation
   myo_gestures
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -116,7 +116,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES gesture_control
-  CATKIN_DEPENDS roscpp rospy std_msgs CATKIN_DEPENDS rospy controller_manager_msgs moveit_core moveit_planning moveit_planning_interface sensor_msgs std_msgs tf2 tf2_geometry_msgs moveit_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs CATKIN_DEPENDS rospy controller_manager_msgs moveit_core moveit_planning moveit_planning_interface sensor_msgs std_msgs tf geometry_msgs moveit_msgs
 #  DEPENDS system_lib
 )
 
@@ -144,7 +144,6 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(adroit_tutorial src/adroit_tutorial.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -157,9 +156,8 @@ add_executable(adroit_tutorial src/adroit_tutorial.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(adroit_tutorial
-   ${catkin_LIBRARIES}
-)
+#target_link_libraries(
+#)
 
 #############
 ## Install ##

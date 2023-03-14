@@ -1,16 +1,15 @@
 from __future__ import print_function
-from six.moves import input
 
 import sys
 import copy
-from math import atan2, atan, sqrt, pi, cos,sin,tan
 import rospy
 from moveit_msgs.msg import ExecuteTrajectoryActionResult
 import geometry_msgs.msg
 from sensor_msgs.msg import Joy
-from std_msgs.msg import String, Int32, Float64
+from std_msgs.msg import String, Int32, Float64, Header
 from sensor_msgs.msg import Imu
-# from moveit_commander.conversions import pose_to_list
+from geometry_msgs.msg import Pose
+import tf
 
 
 #### JOY MSG CONTROL
@@ -37,7 +36,17 @@ class GestureControl():
         self.connected_sub = rospy.Subscriber("myo_connected", Int32, self.connected_callback)
         self.gripper_pos_sub = rospy.Subscriber("/hdt_arm/pincer_joint_position_controller/command", Float64, self.gripper_pos_callback)
         self.execute_sub = rospy.Subscriber("/execute_trajectory/result", ExecuteTrajectoryActionResult, self.exec_callback)
+        self.myo_tf = tf.TransformBroadcaster()
+        self.myo_pos = Pose()
+        self.myo_pos.position.x = 0.0
+        self.myo_pos.position.y = -0.5
+        self.myo_pos.position.z  = 0.0
+        self.t0 = 0.0
+        self.dt = 0.0
+
         self.rate = 10.0 # 10hz
+
+        self.prev_time = Header()
         self.joy_msg = Joy()
         self.gesture_msg = String()
         self.prev_gesture = String()
@@ -48,7 +57,7 @@ class GestureControl():
         self.connected_msg.data = 0
         self.execute_msg = ExecuteTrajectoryActionResult()
         self.timer = rospy.Timer(rospy.Duration(1.0/10.0), self.timer_callback)
-        self.button_initialized = 0
+        # self.button_initialized = 0
         self.final_initialized = 0
         self.exec_initialized = 0
 
@@ -62,13 +71,12 @@ class GestureControl():
         self.rollF = 0
         self.pitchF = 0
         
-        self.x_joy_control = 0.0
+        self.wrist_control = 0.0
         self.y_joy_control = 0.0  ## Corresponds to right-left movement of axes[0] (Joint 1)
         self.z_joy_control = 0.0  ## Corresponds to up-down movement of axes 
         self.shutdown_list = []
 
-
-        rospy.on_shutdown(self.arm_shutdown)
+        # rospy.on_shutdown(self.arm_shutdown)
 
     def connected_callback(self, msg):
         self.connected_msg = msg
@@ -104,94 +112,21 @@ class GestureControl():
         self.gesture_msg = gest_data
 
 
-                # self.pub.publish(self.joy_msg)
-        # if self.final_initialized == 1:
-        #     if self.gesture_msg.data == "FIST":
-        #         rospy.loginfo("IN FIST")
-        #         # self.joy_msg.axes[5] = 0.5 
-        #         print("GRIPPER POS", self.gripper_pos_msg.data )
-        #         self.joy_msg.axes[2] = 0.2 ## axis[2] to close,axis[5] to open
-        #         if self.gripper_pos_msg.data < 0.35:    ## Limit the gripper joint position so that it does not continue closing when making gesture
-        #             rospy.loginfo("STOP CLOSING %s", self.gripper_pos_msg.data )   ### If axis[5] has a value other than 1.0, it will still open the gripper in the next pub
-        #             self.joy_msg.axes[2] = 1.0
-        #         self.pub.publish(self.joy_msg)
-        #     else:
-        #         self.joy_msg.axes[2] = 1.0
-        #         self.joy_msg.axes[5] = 0.5
-        #         if self.gripper_pos_msg.data > 0.60:    ## Limit the gripper joint position so that it does not continue closing when making gesture
-        #             rospy.loginfo("STOP OPENING %s", self.gripper_pos_msg.data )   ### If axis[5] has a value other than 1.0, it will still open the gripper in the next pub
-        #             self.joy_msg.axes[5] = 1.0
-        #         self.pub.publish(self.joy_msg)
-
-            # if self.gesture_msg.data != "FIST":
-
-
     def imu_callback(self, imu_data):
         self.imu_msg = imu_data
+
         # rospy.loginfo("IMU ACC X: %s", self.imu_msg.linear_acceleration.x)
         # rospy.loginfo("IMU ACC Y: %s", self.imu_msg.linear_acceleration.y)
         # rospy.loginfo("IMU GYRO X: %s", self.imu_msg.angular_velocity.x)
         # rospy.loginfo("IMU GRYO Y: %s", -1*self.imu_msg.angular_velocity.y / 60.0)
 
-        # if (self.imu_msg.linear_acceleration.x > 0.1 or self.imu_msg.linear_acceleration.y > 0.1 or self.imu_msg.linear_acceleration.z > 0.1):
-        #     # rospy.loginfo("DETECTED TILT")
-        #     # rospy.loginfo("IMU GRYO X: %s", self.imu_msg.angular_velocity.x)
-        #     # rospy.loginfo("IMU GRYO Y: %s", self.imu_msg.angular_velocity.y)
-        #     roll = atan(self.imu_msg.linear_acceleration.y / sqrt(((self.imu_msg.linear_acceleration.x**2) + (self.imu_msg.linear_acceleration.z**2)))) *(180/pi)
-        #     pitch = atan(-1 *self.imu_msg.linear_acceleration.x / sqrt(((self.imu_msg.linear_acceleration.y**2) + (self.imu_msg.linear_acceleration.z**2)))) *(180/pi)
-            
-
-        #     self.rollF = 0.98 * self.rollF + 0.02 * roll
-        #     self.pitchF = 0.98 * self.pitchF + 0.02 * pitch
-            
-        #     # self.x_joy_control = self.imu_msg.linear_acceleration.x  * cos(self.rollF)
-        #     # self.y_joy_control = self.imu_msg.linear_acceleration.y  * cos(self.pitchF)
-        #     self.y_joy_control = (self.imu_msg.angular_velocity.z / 60.0) * cos(self.rollF)
-        #     self.z_joy_control = (self.imu_msg.angular_velocity.y / 60.0) * cos(self.pitchF)
-
-            
-        # else:
-        #     # self.x_joy_control = self.imu_msg.linear_acceleration.x 
-        #     # self.y_joy_control = self.imu_msg.linear_acceleration.y
-        #     self.y_joy_control = self.imu_msg.angular_velocity.z / 60.0
-        #     self.z_joy_control = self.imu_msg.angular_velocity.y / 60.0
-
-        # self.x_joy_control = self.imu_msg.angular_velocity.x / 60.0
-        # self.y_joy_control = self.imu_msg.angular_velocity.z / 60.0
-        # self.z_joy_control = self.imu_msg.angular_velocity.y / 60.0
-
-        # if ((self.imu_msg.angular_velocity.x / 60.0) > 0.1 or (self.imu_msg.angular_velocity.y / 60.0) > 0.1 or (self.imu_msg.angular_velocity.z / 60.0)> 0.1):
-        #     # rospy.loginfo("DETECTED TILT")
-        #     # rospy.loginfo("IMU GRYO X: %s", self.imu_msg.angular_velocity.x)
-        #     # rospy.loginfo("IMU GRYO Y: %s", self.imu_msg.angular_velocity.y)
-        #     roll = atan((self.imu_msg.angular_velocity.y / 60.0) / sqrt((((self.imu_msg.angular_velocity.x / 60.0)**2) + ((self.imu_msg.angular_velocity.z / 60.0)**2)))) *(180/pi)
-        #     pitch = atan(-1 *(self.imu_msg.angular_velocity.x / 60.0) / sqrt((((self.imu_msg.angular_velocity.y / 60.0)**2) + ((self.imu_msg.angular_velocity.z / 60.0)**2)))) *(180/pi)
-            
-
-        #     self.rollF = 0.98 * self.rollF + 0.02 * roll
-        #     self.pitchF = 0.98 * self.pitchF + 0.02 * pitch
-            
-        #     # self.x_joy_control = self.imu_msg.linear_acceleration.x  * cos(self.rollF)
-        #     # self.y_joy_control = self.imu_msg.linear_acceleration.y  * cos(self.pitchF)
-        #     self.y_joy_control = (self.imu_msg.angular_velocity.z / 60.0) * cos(self.rollF)
-        #     self.z_joy_control = (self.imu_msg.angular_velocity.y / 60.0) * cos(self.pitchF)
-
-            
-        # else:
-        #     # self.x_joy_control = self.imu_msg.linear_acceleration.x 
-        #     # self.y_joy_control = self.imu_msg.linear_acceleration.y
-        #     self.y_joy_control = self.imu_msg.angular_velocity.z / 60.0
-        #     self.z_joy_control = self.imu_msg.angular_velocity.y / 60.0
-
-
-        
-
-
+        #### THIS IS WHAT WORKS SO FAR
+        self.wrist_control = self.imu_msg.angular_velocity.x / 60.0
         self.y_joy_control = self.imu_msg.angular_velocity.z / 60.0
         self.z_joy_control = self.imu_msg.angular_velocity.y / 60.0
 
-        # self.y_joy_control = self.imu_msg.linear_acceleration.z 
-        # self.z_joy_control = self.imu_msg.linear_acceleration.y 
+        if self.wrist_control < 0.01 and self.wrist_control > -0.01:
+            self.wrist_control =0.0
 
         if self.y_joy_control < 0.01 and self.y_joy_control > -0.01:
             self.y_joy_control =0.0
@@ -201,42 +136,49 @@ class GestureControl():
         
         if (self.connected_msg.data == 1 and self.final_initialized == 1):
             self.joy_msg.header.stamp = rospy.Time.now()
-            # self.y_joy_control = self.imu_msg.linear_acceleration.y
             self.joy_msg.axes = self.joy_axes
             self.joy_msg.buttons =  self.joy_buttons
             self.joy_msg.axes[0] = -1*self.y_joy_control 
             self.joy_msg.axes[3] = self.z_joy_control  ## The gryo values for  the y-axis of the myo are negative when moving up and positive when moving down when the armband is on
+            self.joy_msg.axes[7] = self.wrist_control 
             self.pub.publish(self.joy_msg)
+
+        ## Make Myo TF
+        self.myo_tf.sendTransform((self.myo_pos.position.x, self.myo_pos.position.y, self.myo_pos.position.z), 
+                                tf.transformations.quaternion_from_euler(0, self.z_joy_control, self.y_joy_control),
+                                rospy.Time.now(),
+                                "myo_imu",
+                                "base_link")
+
 
 
     def press_button(self,button):
-        while self.button_cntr <10:
-            if self.button_cntr > 5:
+        while self.button_cntr <30:
+            if self.button_cntr > 15:
                 self.joy_msg.buttons[button] = 0 
             else:
                 self.joy_msg.buttons[button] = 1 
             self.pub.publish(self.joy_msg)
             self.button_cntr +=1
+            # rospy.sleep(0.7) When in launch file
             rospy.sleep(0.3)
-        print("PRESSED BUTTON: ", button)
+        rospy.loginfo("SENDING BUTTON COMMAND %s", button)
         self.button_cntr = 0
 
     def init_gripper(self):
-        while self.open_counter <40:
-            if self.open_counter  >32:
+        while self.open_counter <10:
+            if self.open_counter  >6:
                 self.joy_msg.axes[5] = 1.0
-                self.joy_msg.axes[7] = 0.0
+                # self.joy_msg.axes[7] = 0.0
             else:
-                self.joy_msg.axes[5] = 0.5
-                self.joy_msg.axes[7] = -0.2
+                self.joy_msg.axes[5] = 0.1
+                # self.joy_msg.axes[7] = -1.0
             self.pub.publish(self.joy_msg)
-                # msg.buttons[2] = 0
-                # pub.publish(msg)
             self.open_counter +=1
             rospy.sleep(0.3)
-        print("GRIPPER DONE")
+        rospy.loginfo("FINISHED INTIALIZING GRIPPER")
+        
         self.open_counter = 0
-
 
     def sim_init(self):
         self.joy_msg.header.stamp = rospy.Time.now()
@@ -245,12 +187,9 @@ class GestureControl():
         if self.exec_initialized == 0:
             self.press_button(2)
             self.init_gripper()
-            # self.init_gripper_rot()
-            # self.press_button(1)
-            # self.press_button(3)
             self.exec_initialized = 1
             self.final_initialized =1
-            print("FINISHED SIM INIT")
+            rospy.loginfo("FINISHED SIM INIT: MYO CONTROL ACTIVE")
 
     def real_init(self):
         self.joy_msg.header.stamp = rospy.Time.now()
@@ -259,7 +198,7 @@ class GestureControl():
         if self.exec_initialized == 0:
             self.press_button(2)
             self.press_button(1)
-            self.press_button(3)
+            self.press_button(3)   ###  CHECK IF REAL INIT WORKS WITH THE CHANGED NAMED SRDF TARGET
             self.exec_initialized = 1
         if (self.execute_msg.result.error_code.val == 1):
             # rospy.sleep(0.5)
@@ -267,19 +206,17 @@ class GestureControl():
             self.init_gripper()
             self.execute_msg.result.error_code.val = 0
             self.final_initialized =1
-            print("FINISHED REAL INIT")
+            rospy.loginfo("FINISHED REAL INIT: MYO CONTROL ACTIVE")
 
     def arm_shutdown(self):
-        print("ARM SHUTTING DOWN...")
+        rospy.loginfo("ARM SHUTTING DOWN...")
         self.joy_msg.header.stamp = rospy.Time.now()
-        # self.joy_msg.axes = self.joy_axes
         self.joy_msg.buttons =  self.joy_buttons
         self.joy_msg.axes = [-0.0, -0.0, 0.2, -0.0, -0.0, 1.0, -0.0, -0.0]
-        # self.joy_buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.press_button(1)
         self.press_button(1)
         self.press_button(3)
-        print("ARM SHUT DOWN")
+        # rospy.loginfo("ARM SHUT DOWN")
 
 
     def timer_callback(self, timer):
@@ -289,7 +226,6 @@ class GestureControl():
                 self.sim_init()
             else:
                 self.real_init()
-
 
         ## NOT FOR SHUTDOWN, ANY GESTURE CAN BE USED TO TRIGGER ANY EVENT IF REPEATED SEQEUENTIALLY
         # self.shutdown_counter+=1

@@ -18,17 +18,14 @@ from std_msgs.msg import Header,  Float64, Int32
 class GestureNode():
     def __init__(self):
         rospy.init_node('real_time_pred')
-        # self.gesture_pub = rospy.Publisher("predicted_gestures", String, queue_size=10)
-        # self.test_pub = rospy.Publisher("test", String, queue_size=10)
-        # self.timer = rospy.Timer(rospy.Duration(1.0/100.0), self.timer_callback)
-        # gest_msg = String()
+
 
         self.model = Network_XL(7)
         self.model_path = rospy.get_param("pytorch_model")  ## Best digit test was combined_transfer_data_XL3.pt
         self.model_stats = rospy.get_param("pytorch_model_stats")
         self.model.load_state_dict(torch.load(self.model_path,map_location='cpu'))
         self.model.eval()
-        self.first_activity = 4 #should be 4 for DIGITS!!!!
+        self.first_activity = 5 #should be 5 for DIGITS!!!!
         
         # self.myo = MyoRaw(None)
         self.mean_emg,self.std_emg = np.loadtxt(str(self.model_stats),delimiter=',')  ## combined_transfer_data_argtest_stats.txt FOR ARGTEST, nina_data/combined_transfer_data_stats.txt ORIGINAL THAT WORKED
@@ -36,17 +33,11 @@ class GestureNode():
         self.pred_array = []
         self.last_pred = 0
         self.pred_cnt = 0
-        self.start_ch = 0
+        self.start_ch = 5
         self.goal_ch = self.first_activity
         self.cal_array = []
 
-        # self.myo.add_emg_handler(self.proc_emg)
-        # print("CONNECTING")    
-        # self.myo.connect()
-        # print("CONNECTED")
         self.connected = 0
-        # self.myo.add_emg_handler(self.proc_emg)
-        # self.myo.add_imu_handler(self.proc_imu)
 
         self.gesture_pub = rospy.Publisher("/predicted_gestures", String, queue_size=10)
         self.imu_pub = rospy.Publisher("myo_imu", Imu, queue_size=10)
@@ -55,20 +46,16 @@ class GestureNode():
         self.gest_msg = String()
 
     def timer_callback(self, timer):
-        # self.myo.add_emg_handler(self.proc_emg)
-        # print("CONNECTING")    
-        # self.myo.connect()
-        # print("CONNECTED")
+        # rospy.sleep(0.3)  ### Just to wait for rviz and move groups to be fully initialized
         while self.connected == 0:  
-            # self.myo.add_emg_handler(self.proc_emg)
+            # rospy.sleep(15.0)
             try:
-                print("CONNECTING")   
+                rospy.logwarn("CONNECTING TO MYO..\n")
                 myo = MyoRaw(None) 
                 myo.connect()
                 myo.add_emg_handler(self.proc_emg)
                 myo.add_imu_handler(self.proc_imu)
                 self.connected =1
-                print("CONNECTED")
             except:
                 rospy.sleep(0.3)
                 pass
@@ -77,6 +64,7 @@ class GestureNode():
             connect_msg = Int32()
             connect_msg.data = 1
             self.connected_pub.publish(connect_msg)
+            rospy.loginfo("CONNECTED\n")
 
         try:
             while not rospy.is_shutdown():
@@ -85,8 +73,8 @@ class GestureNode():
                 # self.gesture_pub.publish(self.gest_msg)
 
         except KeyboardInterrupt:
-            print("KILLING NODE")
-            print('\n')
+            # print("KILLING NODE")
+            # print('\n')
             self.myo.disconnect()
             print("Disconnected")
             pass
@@ -111,9 +99,7 @@ class GestureNode():
                     if mode(self.pred_array) != self.last_pred:
                         self.pred_cnt += 1
                     if self.pred_cnt > 15:
-                        # print('Predicted Gesture: {}'.format(mode(self.pred_array)))
                         pred  = self.display_gest(mode(self.pred_array))
-                        # gest_msg = String()
                         self.gest_msg.data = pred
                         self.gesture_pub.publish(self.gest_msg)
                         self.last_pred = mode(self.pred_array)
@@ -122,34 +108,24 @@ class GestureNode():
                 except:
                     self.pred_array.clear()
             self.emg_array.pop(0)
-        # else:
 
-        #     self.gest_msg.data = "null"
-        #     self.gesture_pub.publish(self.gest_msg)
 
     def display_gest(self,pred):
         '''Prints text corresponding to passed prediction (pred)'''
         if pred == 0:
             prediction = "OPEN HAND"
-            # rospy.loginfo('\rPredicted Gesture: OPEN HAND     ',end='')
         elif pred == 1:
             prediction = "INDEX"
-            # rospy.loginfo('\rPredicted Gesture: INDEX FINGER  ',end='')
         elif pred == 2:
             prediction = "MIDDLE"
-            # rospy.loginfo('\rPredicted Gesture: MIDDLE FINGER ',end='')
         elif pred == 3:
             prediction = "RING"
-            # rospy.loginfo('\rPredicted Gesture: RING FINGER   ',end='')
         elif pred == 4:
             prediction = "PINKY"
-            # rospy.loginfo('\rPredicted Gesture: PINKY FINGER  ',end='')
         elif pred == 5:
             prediction = "THUMB"
-            # rospy.loginfo('\rPredicted Gesture: THUMB         ',end='')
         elif pred == 6:
             prediction = "FIST"
-            # rospy.loginfo('\rPredicted Gesture: FIST          ',end='')
 
         rospy.loginfo("Predicted Gesture: %s", prediction)
         return prediction

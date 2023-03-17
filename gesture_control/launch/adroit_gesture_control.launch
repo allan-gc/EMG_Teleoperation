@@ -13,9 +13,9 @@
   <node name="real_time" pkg="gesture_control" type="real_time.py" output="screen" />
 
   <!-- Run adroit-myo interface node-->
-  <!-- <node name="gesture_command" pkg="gesture_control" type="adroit_gesture_command.py" output="screen" >
+  <node name="gesture_command" pkg="gesture_control" type="adroit_gesture_command.py" output="screen" >
     <param name="sim" value= "$(arg myo_sim)"/>
-  </node> -->
+  </node>
 
 
 

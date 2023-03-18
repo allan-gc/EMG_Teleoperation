@@ -21,9 +21,10 @@ https://user-images.githubusercontent.com/103614797/226111274-473e9105-e919-47c1
 
 
 
+<br>
+<br/>
 
-
-And here is a video of how real time prediction with the node:
+And here is a video of real time prediction with the node:
 
 
 [REALTIME_NODE.webm](https://user-images.githubusercontent.com/103614797/226111660-7e2f8179-795a-4b84-aff8-ab8f2482efb0.webm)

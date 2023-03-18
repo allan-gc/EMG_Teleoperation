@@ -40,7 +40,7 @@ class GestureNode():
         """ Initializes real_time node node """
 
         # Initializing PyTorch model
-        # rospy.init_node('gestures')
+        rospy.init_node('gestures')
         self.model = Network_XL(7)
         self.model_path = rospy.get_param("pytorch_model")  ## Best digit test was combined_transfer_data_XL3.pt
         self.model_stats = rospy.get_param("pytorch_model_stats")

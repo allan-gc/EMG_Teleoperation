@@ -219,7 +219,7 @@ class GestureControl():
     def joint2_pos_callback(self, joint2_msg):
         """ Callback for Joint 2 position controller, used to set joint limits when extending the joint """
         self.joint2_pos_msg = joint2_msg
-        if self.final_initialized == 1 and self.gesture == "MIDDLE":
+        if self.final_initialized == 1 and self.gesture == "THUMB":
             # rospy.loginfo("EXTENDING JOINT 2")
             self.gest_counter+=1
             if self.gest_counter >15:
@@ -267,14 +267,14 @@ class GestureControl():
             rospy.logwarn("JOINT 3 POS LIMIT REACHED: %s", self.joint2_pos_msg.data)
         
         # if (self.connected_msg.data == 1 and self.final_initialized == 1):
-        # if (self.state ==  State.MOTION_CONTROL):
-        #     self.joy_msg.header.stamp = rospy.Time.now()
-        #     self.joy_msg.axes = self.joy_axes
-        #     self.joy_msg.buttons =  self.joy_buttons
-        #     self.joy_msg.axes[0] = -1*self.y_joy_control #The gryo values for the y-axis of the myo are negative when moving up and positive when moving down when the armband is on, so mulitplied by -1 for easier control
-        #     self.joy_msg.axes[3] = self.z_joy_control  
-        #     self.joy_msg.axes[7] = self.wrist_control 
-        #     self.pub.publish(self.joy_msg)
+        if (self.state ==  State.MOTION_CONTROL):
+            self.joy_msg.header.stamp = rospy.Time.now()
+            self.joy_msg.axes = self.joy_axes
+            self.joy_msg.buttons =  self.joy_buttons
+            self.joy_msg.axes[0] = -1*self.y_joy_control #The gryo values for the y-axis of the myo are negative when moving up and positive when moving down when the armband is on, so mulitplied by -1 for easier control
+            self.joy_msg.axes[3] = self.z_joy_control  
+            self.joy_msg.axes[7] = self.wrist_control 
+            self.pub.publish(self.joy_msg)
 
         ## Make Myo TF
         self.myo_tf.sendTransform((self.myo_pos.position.x, self.myo_pos.position.y, self.myo_pos.position.z), 

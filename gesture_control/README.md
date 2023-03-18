@@ -19,6 +19,10 @@ Here is a demo of how the IMU control looks in Rviz:
 https://user-images.githubusercontent.com/103614797/226111274-473e9105-e919-47c1-94e6-75de98c42efa.mp4
 
 
+
+
+
+
 And here is a video of how real time prediction with the node:
 
 

@@ -31,6 +31,7 @@ And here is a video of real time prediction with the node:
 
 <br>
 <br/>
+
 For more detailed videos involving control of the real Adroit and more information, check out my portfolio post [here](https://allan-gc.github.io/Adroit.html).
 
 

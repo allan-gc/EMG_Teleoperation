@@ -4,7 +4,7 @@ This repository consists of one main package that is used for controlling an Adr
 
 Here is a demo video that shows the basic functionalities of the system:
 
-[![1](https://img.youtube.com/vi/vs365Rjnnqg/2.jpg)](https://www.youtube.com/watch?v=vs365Rjnnqg)
+[![1](https://img.youtube.com/vi/vs365Rjnnqg/0.jpg)](https://www.youtube.com/watch?v=vs365Rjnnqg)
 
 
 

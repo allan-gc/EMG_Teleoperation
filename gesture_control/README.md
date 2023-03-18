@@ -15,3 +15,7 @@ The package contains the following launch files:
 This package is intended to work alongisde the other Adroit control packages that I cannot share. However, if you do have access to those files and are interested in running this package with it, you will need the proper set up for connecting to and running the Myo Armband. I suggest looking this [link](http://www.fernandocosentino.net/pyoconnect/) for getting started. Once you are able to connect with the Myo, you should be able to run the launch file above with `myo_sim` set to  true. With the Myo on your forearm you should be able to control the Adroit by moving your arm and making gestures.
 
 Here is a demo of how the control looks in Rviz: 
+
+
+https://user-images.githubusercontent.com/103614797/226111274-473e9105-e919-47c1-94e6-75de98c42efa.mp4
+

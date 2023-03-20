@@ -4,6 +4,6 @@ This repository consists of one main package that is used for controlling an Adr
 
 Here is a demo video showing full control of the Adroit using the Myo Armband:
 
-[![Demo(https://img.youtube.com/vi/vs365Rjnnqg&t=3s/0.jpg)](https://www.youtube.com/watch?v=vs365Rjnnqg&t=3s)
+[![Demo](https://img.youtube.com/vi/vs365Rjnnqg&t=3s/0.jpg)](https://www.youtube.com/watch?v=vs365Rjnnqg&t=3s)
 
 

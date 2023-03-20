@@ -9,7 +9,7 @@ The package contains the following launch files:
 
 * `hdt_arm_bringup_1.launch`: this launches the necessary Adroit controllers, communication protocols, MoveIt and Rviz. It launches the `hdt_arm_bringup_2.launch` and the `adroit_gesture_control.launch` launch file described below.
    * Use `roslaunch gesture_control hdt_arm_bringup_1.launch simulation:=false controller_type:=myo` to start up the Adroit and establish the Myo armband as the controller. The Adroit must be connected to your computer for the communication protocols to be established. 
-      * Set `simulation` to `false` to control the robot through a simulated rviz environment. `controller_type` can be set to `xbox` to control the Adroit with an Xbox controller. 
+      * Set `simulation` to `true` to control the robot through a simulated rviz environment. `controller_type` can be set to `xbox` to control the Adroit with an Xbox controller. 
       
 * `adroit_gesture_control.launch`: this launches the `real_time` gesture node and the `adroit_gesture_command` node. It takes a `myo_sim` argument that determines whether to only launch rviz or to also communicate with the real robot. It also passes in the necessary PyTorch files into the `real_time` node This launch file on its own does not control the real Adroit arm. It must either be included in the Adroit control launch files or launched after the Adroit control launch files have been launched. 
     * Use `adroit_gesture_control.launch myo_sim:=true` to control the Adroit in simulation with predicted gestures and IMU measurments from the Myo. 
